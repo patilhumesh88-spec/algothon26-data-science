@@ -12,7 +12,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from .config import (DATA_RAW, MODE_COLS, MODEL_PATH, MODELS_DIR, RANDOM_STATE, REPORTS_DIR, TARGET)
+from .config import (DATA_RAW, MODE_COLS, MODEL_PATH, MODELS_DIR,
+                     PRODUCTION_THRESHOLD, RANDOM_STATE, REPORTS_DIR, TARGET)
 from .data import label_consistency_report, load_raw
 from .features import ENGINEERED_FEATURES, RAW_FEATURES, build_features
 from .models import make_models, make_rf
@@ -99,7 +100,8 @@ def main(argv=None):
     if args.fit_all:
         full = build_features(df)[ENGINEERED_FEATURES]
         model = make_rf().fit(full, df[TARGET].values)
-    joblib.dump({"model": model, "features": ENGINEERED_FEATURES, "threshold": 0.5,
+    joblib.dump({"model": model, "features": ENGINEERED_FEATURES,
+                 "threshold": PRODUCTION_THRESHOLD,
                  "fit_on": "all" if args.fit_all else "dev"}, MODEL_PATH)
     print(f"\nSaved model -> {MODEL_PATH}")
 

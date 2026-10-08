@@ -12,14 +12,14 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from .config import ID_COLS, MODEL_PATH
+from .config import ID_COLS, MODEL_PATH, PRODUCTION_THRESHOLD
 from .data import validate_inputs
 from .features import build_features
 from .rules import rule_flags
 
 
 def predict_frame(df: pd.DataFrame, bundle: dict, threshold: Optional[float] = None) -> pd.DataFrame:
-    thr = bundle.get("threshold", 0.5) if threshold is None else threshold
+    thr = bundle.get("threshold", PRODUCTION_THRESHOLD) if threshold is None else threshold
     status = validate_inputs(df)            # raises ValueError if required columns are missing
     ok = (status == "ok").values
 
@@ -47,8 +47,8 @@ def predict_frame(df: pd.DataFrame, bundle: dict, threshold: Optional[float] = N
         r = out.iloc[i]
         modes = [m for m, c in (("HDF", "rule_hdf"), ("PWF", "rule_pwf"), ("OSF", "rule_osf")) if r[c]]
         if modes:
-            return "+".join(modes)
-        return "ML-only (unexplained)" if r["risk_flag"] else "none"
+            return "Rule-triggered failure risk (" + "+".join(modes) + ")"
+        return "Residual statistical risk" if r["risk_flag"] else "No documented rule triggered"
     out["likely_mode"] = [explain(i) for i in range(len(out))]
     out["status"] = status.values
     return out
